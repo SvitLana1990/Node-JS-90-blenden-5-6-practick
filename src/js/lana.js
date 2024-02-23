@@ -1,0 +1,1 @@
+export default "lana from españa";

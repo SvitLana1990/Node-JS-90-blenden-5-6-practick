@@ -13,8 +13,16 @@ const RollesModel = require("./models/Rolles");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("./middlewares/authMiddleware");
+const { engine } = require("express-handlebars");
+const sendEmail = require("./servises/sendEmail");
 
 const app = express();
+
+app.use(express.static("public"));
+
+app.engine("handlebars", engine());
+app.set("view engine", "handlebars");
+app.set("views", "backend/views");
 
 app.use(express.json());
 
@@ -22,7 +30,37 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use("/api/v1", require("../routes/drinksRoutes"));
 
+app.get("/", (req, res) => {
+  res.render("home");
+});
+
+app.get("/about", (req, res) => {
+  res.render("about");
+});
+
+app.get("/contact", (req, res) => {
+  res.render("contact");
+});
+
+app.post("/sended", async (req, res) => {
+  // res.send(req.body);
+  try {
+    res.render("sended", {
+      message: "Contact form send success",
+      email: req.body.userEmail,
+      name: req.body.userName,
+    });
+    await sendEmail(req.body);
+  } catch (error) {
+    res.status(400).json({ code: 400, message: error.message });
+  }
+});
+
 // регістрація - збереження нового киристувача в базу
+
+app.get("/register", (req, res) => {
+  res.render("register");
+});
 
 app.post(
   "/register",
@@ -50,15 +88,22 @@ app.post(
       password: hashPassword,
       rolles: [rolles.value],
     });
-    res.status(201).json({
-      code: 201,
-      message: "sucsess",
-      data: { email: user.email, name: user.name },
-    });
+    // res.status(201).json({
+    //   code: 201,
+    //   message: "sucsess",
+    //   data: { email: user.email, name: user.name },
+    // });
+    res.status(201);
+    res.render("register_ok");
   })
 );
 
 // аунтефікація - перевірка данних які надав користувач при регістрації з тими даними, що наявні в базі.
+
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
 app.post(
   "/login",
   asyncHandler(async (req, res) => {
@@ -85,11 +130,13 @@ app.post(
     // //5.зберігаємо в базу з токеном
     user.token = token;
     await user.save();
-    res.status(200).json({
-      code: 200,
-      message: "sucsess",
-      data: { email: user.email, token: user.token },
-    });
+    // res.status(200).json({
+    //   code: 200,
+    //   message: "sucsess",
+    //   data: { email: user.email, token: user.token },
+    // });
+    res.status(200);
+    res.render("login_ok");
   })
 );
 

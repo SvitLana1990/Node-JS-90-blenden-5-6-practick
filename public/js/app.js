@@ -1,0 +1,1 @@
+(()=>{"use strict";console.log("Hello from Webpack"),console.log("1500lana from españa")})();
